@@ -922,10 +922,10 @@ index 0000000..7adf814
 +}
 diff --git a/src/lib/ai/brain.ts b/src/lib/ai/brain.ts
 new file mode 100644
-index 0000000..178b958
+index 0000000..dfe0717
 --- /dev/null
 +++ b/src/lib/ai/brain.ts
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,165 @@
 +/**
 + * The assistant's brain.
 + *
@@ -1020,32 +1020,37 @@ index 0000000..178b958
 +/* ------------------------------------------------------------------ */
 +
 +const rules: { match: RegExp; answer: string }[] = [
++  // Emergencies are checked first: they must never be shadowed by a topic rule.
 +  {
-+    match: /\b(price|cost|how much|quote|budget|expensive|cheap|per foot)\b/i,
++    match: /\b(emergenc(?:y|ies)|urgent|asap|right now|burst|flood(?:ing|ed)?|sew(?:age|er)|contaminat(?:ed|ion)|septic|leaking everywhere)\b/i,
++    answer: `If this is urgent, call ${business.phoneDisplay} now and the office will take it from there. If it can wait until business hours, send a request through the form and we'll call you back — but anything involving no water, contamination or an electrical problem is worth a phone call first.`,
++  },
++  {
++    match: /\b(prices?|costs?|how much|quotes?|budgets?|expensive|cheap|per foot|pricing)\b/i,
 +    answer: `Cost depends on the depth, the casing, the pump system and what the ground is actually doing — so anyone who quotes a flat number sight-unseen is guessing. The honest way to a real number is the free on-site visit: we walk the property, explain the method that suits your formation and give you a written, itemized estimate with no obligation.\n\n[[BOOK]]`,
 +  },
 +  {
-+    match: /\b(permit|approval|licen[cs]e|legal|regulation)\b/i,
++    match: /\b(permits?|approvals?|licen[cs]es?|licen[cs]ed|legal|regulations?|laws?)\b/i,
 +    answer: `Permitting is handled by us, and our representative advises you on the city or county approvals your project needs during the free estimate. Florida requires wells to be drilled by a licensed contractor and abandoned properly, so this part isn't optional — we just make sure it's done correctly.\n\n[[BOOK]]`,
 +  },
 +  {
-+    match: /\b(area|cover|coverage|serve|service area|zip|jacksonville|near me|location)\b/i,
++    match: /\b(areas?|cover(?:age|ed)?|serv(?:e|es|ing)|zip(?: code)?s?|jacksonville|st\.? johns|florida|near me|locations?)\b/i,
 +    answer: `We drill across ${business.region}, serving Jacksonville and the surrounding communities. Send your ZIP code with a request and coverage is confirmed straight away, or call ${business.phoneDisplay} and we'll tell you right then.`,
 +  },
 +  {
-+    match: /\b(how long|timeline|when|duration|days|schedule)\b/i,
++    match: /\b(how long|timelines?|duration|days?|weeks?|schedules?|how soon|when can)\b/i,
 +    answer: `Most residential wells are drilled in a few days once the rig is on site. The full timeline also depends on the formation, your target depth, weather, pump installation and how quickly permits clear — so we give you a realistic schedule with your estimate rather than a hopeful one.\n\n[[BOOK]]`,
 +  },
 +  {
-+    match: /\b(pump|pressure|cycling|sand in the water|no water|dry)\b/i,
++    match: /\b(pumps?|pressure|cycling|sand in the water|no water|dry|running dry|water quality|smells?|tastes?|odou?rs?|iron|sulfur|rotten eggs?|hard water|cloudy|discolou?red|sediment)\b/i,
 +    answer: `That usually has a specific cause — a pump, a pressure tank, a screen or the well itself — and the fix depends on which one it is. Tell us what you're seeing and we'll tell you honestly what's worth doing before recommending the expensive option. If you have no water at all, call ${business.phoneDisplay}.\n\n[[BOOK]]`,
 +  },
 +  {
-+    match: /\b(rock well|rock wells)\b/i,
++    match: /\b(rock wells?|drill(?:ing)? (?:into )?rock)\b/i,
 +    answer: `Rock wells reach water held in hard rock formations and, done right, they're among the longest-lived private water supplies you can have. We walk your property first, talk through what the local formations typically yield, and explain the casing and depth we expect before any rig moves in.\n\n[[SERVICE:rock-wells]]`,
 +  },
 +  {
-+    match: /\b(screen well|screen wells|sandy)\b/i,
++    match: /\b(screen wells?|sandy|sand wells?)\b/i,
 +    answer: `In the sandy aquifers across our part of Florida a screened well is often the right answer — good flow, faster to drill, easier to maintain. The screen has to match the sand it sits in, or you pump sand instead of water, which is exactly why that sizing conversation happens with you before we start.\n\n[[SERVICE:screen-wells]]`,
 +  },
 +  {
@@ -1053,25 +1058,25 @@ index 0000000..178b958
 +    answer: `Florida sits on pressurized aquifers, and on some properties that pressure means water rises on its own. Depth, casing and flow control all matter, so we tell you honestly whether your parcel is a realistic candidate before you commit to a project.\n\n[[SERVICE:artesian-wells]]`,
 +  },
 +  {
-+    match: /\b(salt\s*&?\s*pepper|salt and pepper)\b/i,
++    match: /\b(salt\s*&?\s*pepper|salt and pepper wells?|brackish|irrigation|livestock|cattle)\b/i,
 +    answer: `Salt & pepper wells are a practical option where the water is suitable for irrigation or non-potable use. We test and talk through what the water is good for before you spend anything.\n\n[[SERVICE:salt-pepper-wells]]`,
 +  },
 +  {
-+    match: /\b(abandon|sealing|old well|unused well)\b/i,
++    match: /\b(abandon(?:ment|ed|ing)?|sealing|old wells?|unused wells?|decommission)/i,
 +    answer: `Florida requires unused wells to be properly abandoned and sealed, and it has to be done by a licensed contractor. We handle the plugging and the paperwork so the liability isn't left sitting on your property.\n\n[[SERVICE:well-abandonment]]`,
 +  },
 +  {
-+    match: /\b(appointment|estimate|book|visit|come out|inspection|survey)\b/i,
++    match: /\b(appointments?|estimates?|book(?:ing)?|visits?|come out|inspection|survey|on-?site|schedule a)\b/i,
 +    answer: `The estimate is free and there's no obligation: we come to the property, look at the ground and the access, explain which method suits your formation, and leave you a written estimate to take your time over. Use the "Book a free estimate" button under this chat and we'll call you to confirm the time.\n\n[[BOOK]]`,
 +  },
 +  {
-+    match: /\b(hour|open|today|saturday|sunday|call)\b/i,
++    match: /\b(hours?|open|opening|today|tomorrow|saturdays?|sundays?|closed|call|phone|contact|reach you)\b/i,
 +    answer: `We're on the phone ${business.hours
 +      .map((hour) => `${hour.days} ${hour.time}`)
 +      .join(", ")}, at ${business.phoneDisplay}. Outside those hours, send a request through the form and we'll call you back.`,
 +  },
 +  {
-+    match: /\b(who are you|are you (a )?(human|bot|ai)|real person)\b/i,
++    match: /\b(who are you|are you (?:a )?(?:human|bot|ai|robot|real)|real person|chat ?bot)\b/i,
 +    answer: `I'm the assistant on ${business.name}'s website — an automated helper, not a person. Anything you'd rather discuss with a human, call ${business.phoneDisplay} and you'll get the office.`,
 +  },
 +];
@@ -1088,10 +1093,10 @@ index 0000000..178b958
 +}
 diff --git a/src/lib/ai/providers.ts b/src/lib/ai/providers.ts
 new file mode 100644
-index 0000000..6bc0da7
+index 0000000..af76cd7
 --- /dev/null
 +++ b/src/lib/ai/providers.ts
-@@ -0,0 +1,233 @@
+@@ -0,0 +1,235 @@
 +/**
 + * Provider chain for the site assistant.
 + *
@@ -1163,7 +1168,9 @@ index 0000000..6bc0da7
 +    url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
 +    keyEnv: "GEMINI_API_KEY",
 +    modelEnv: "GEMINI_MODEL",
-+    defaultModels: ["gemini-2.5-flash", "gemini-2.0-flash"],
++    // Verified live against this key: 2.5-flash, flash-latest and flash-lite all
++    // exist in the account's model list. Anything that 404s falls through.
++    defaultModels: ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"],
 +  },
 +  cerebras: {
 +    label: "Cerebras",

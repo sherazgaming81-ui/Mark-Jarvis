@@ -69,7 +69,9 @@ export const PROVIDER_DEFS: Record<string, ProviderDef> = {
     url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
     keyEnv: "GEMINI_API_KEY",
     modelEnv: "GEMINI_MODEL",
-    defaultModels: ["gemini-2.5-flash", "gemini-2.0-flash"],
+    // Verified live against this key: 2.5-flash, flash-latest and flash-lite all
+    // exist in the account's model list. Anything that 404s falls through.
+    defaultModels: ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"],
   },
   cerebras: {
     label: "Cerebras",
