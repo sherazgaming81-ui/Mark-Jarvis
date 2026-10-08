@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lead Response System — Live Demo | Symbiote Systems</title>
+<style>
+  :root{
+    --navy:#0F1E35;
+    --ink:#101828;
+    --muted:#5B6B82;
+    --line:#E4E9F2;
+    --bg:#F5F7FA;
+    --card:#FFFFFF;
+    --accent:#2F6FED;
+    --accent-soft:#EAF1FE;
+    --success:#16A34A;
+    --success-soft:#E8F7EE;
+    --warn:#B45309;
+    --warn-soft:#FEF3E2;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+    --shadow-lg:0 12px 40px rgba(16,24,40,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  button{font-family:inherit;cursor:pointer}
+  input{font-family:inherit}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    background:var(--navy);
+    color:#fff;
+    padding:10px 20px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
+  .brand .mark{
+    width:30px;height:30px;border-radius:9px;
+    background:linear-gradient(135deg,#2F6FED,#7C4DFF);
+    display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;
+  }
+  .brand .sub{font-weight:500;opacity:.65;font-size:12.5px;margin-left:2px}
+  .spacer{flex:1}
+  .viewtabs{
+    display:flex;background:rgba(255,255,255,.1);border-radius:12px;padding:4px;gap:4px;
+  }
+  .viewtabs button{
+    border:0;background:transparent;color:rgba(255,255,255,.75);
+    padding:7px 14px;border-radius:9px;font-size:13.5px;font-weight:600;transition:.18s;
+  }
+  .viewtabs button.active{background:#fff;color:var(--navy)}
+  .livepill{
+    display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
+    background:rgba(255,255,255,.1);padding:6px 12px;border-radius:999px;color:#D6E4FF;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:#3DDC84;box-shadow:0 0 0 0 rgba(61,220,132,.7);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,220,132,.55)}70%{box-shadow:0 0 0 8px rgba(61,220,132,0)}100%{box-shadow:0 0 0 0 rgba(61,220,132,0)}}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 90px}
+  .view{display:none;animation:fadeUp .35s ease}
+  .view.active{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .hero{margin:6px 0 18px}
+  .hero h1{font-size:clamp(21px,3vw,28px);letter-spacing:-.4px}
+  .hero p{color:var(--muted);max-width:760px;margin-top:6px;font-size:14.5px}
+
+  .grid2{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:20px;align-items:start}
+  @media (max-width:940px){.grid2{grid-template-columns:1fr}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card .pad{padding:18px}
+
+  /* ---------- Listing (customer side) ---------- */
+  .listing{overflow:hidden}
+  .listing .photo{
+    height:230px;position:relative;
+    background:
+      radial-gradient(120% 90% at 78% 8%, #BFD7FF 0%, rgba(191,215,255,0) 55%),
+      radial-gradient(90% 80% at 12% 92%, #CDEBDA 0%, rgba(205,235,218,0) 55%),
+      linear-gradient(160deg,#22355A 0%,#0F1E35 100%);
+    display:grid;place-items:center;
+  }
+  .photo svg{width:190px;height:190px;opacity:.95;filter:drop-shadow(0 12px 30px rgba(0,0,0,.35))}
+  .badge{
+    position:absolute;top:14px;left:14px;background:rgba(255,255,255,.92);color:var(--navy);
+    font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px;letter-spacing:.2px;
+  }
+  .badge.hot{left:auto;right:14px;background:#FFE9D6;color:#9A4B00}
+  .listing .body{padding:18px}
+  .price{font-size:23px;font-weight:800;letter-spacing:-.4px}
+  .price small{font-size:13px;color:var(--muted);font-weight:600;margin-left:6px}
+  .ltitle{font-size:16.5px;font-weight:700;margin-top:4px}
+  .lmeta{color:var(--muted);font-size:13.5px;margin-top:4px}
+  .chipsrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .tag{font-size:12.5px;font-weight:600;color:#33415C;background:#F1F4F9;border:1px solid var(--line);padding:5px 10px;border-radius:999px}
+  .cta{
+    margin-top:16px;width:100%;border:0;border-radius:12px;padding:14px 18px;
+    background:var(--accent);color:#fff;font-size:15px;font-weight:700;
+    transition:.18s;box-shadow:0 6px 18px rgba(47,111,237,.28);
+  }
+  .cta:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(47,111,237,.35)}
+  .cta.ghost{background:#fff;color:var(--navy);border:1px solid var(--line);box-shadow:none;font-weight:600}
+  .democtl{margin-top:10px;display:flex;gap:8px}
+  .democtl button{flex:1;border:1px dashed #C8D3E4;background:#FBFCFE;color:#4A5A75;border-radius:11px;padding:10px;font-size:12.5px;font-weight:600}
+  .democtl button:hover{border-color:var(--accent);color:var(--accent)}
+
+  /* ---------- Chat ---------- */
+  .chat{display:flex;flex-direction:column;height:640px;overflow:hidden}
+  .chathead{
+    display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#FFFFFF,#FBFCFE);
+  }
+  .avatar{
+    width:38px;height:38px;border-radius:50%;flex:0 0 auto;
+    background:linear-gradient(135deg,#2F6FED,#7C4DFF);color:#fff;display:grid;place-items:center;
+    font-weight:800;font-size:14px;
+  }
+  .chathead .who{font-weight:700;font-size:14.5px}
+  .chathead .status{font-size:12px;color:var(--success);font-weight:600;display:flex;align-items:center;gap:5px}
+  .chatbody{flex:1;overflow-y:auto;padding:18px 16px;background:#F8FAFD;display:flex;flex-direction:column;gap:10px}
+  .msg{max-width:82%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.45;animation:pop .22s ease;white-space:pre-wrap}
+  @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+  .msg.bot{background:#fff;border:1px solid var(--line);border-bottom-left-radius:6px;align-self:flex-start;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+  .msg.user{background:var(--accent);color:#fff;border-bottom-right-radius:6px;align-self:flex-end}
+  .msg.sys{align-self:center;background:var(--warn-soft);color:var(--warn);border:1px solid #F5DDBB;font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:999px;max-width:92%;text-align:center}
+  .msg.sys.ok{background:var(--success-soft);color:var(--success);border-color:#C6EAD3}
+  .typing{align-self:flex-start;background:#fff;border:1px solid var(--line);border-radius:16px;border-bottom-left-radius:6px;padding:13px 16px;display:flex;gap:5px}
+  .typing i{width:7px;height:7px;border-radius:50%;background:#A9B6CC;animation:blink 1.2s infinite}
+  .typing i:nth-child(2){animation-delay:.18s}
+  .typing i:nth-child(3){animation-delay:.36s}
+  @keyframes blink{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+  .quickbar{padding:12px 14px;border-top:1px solid var(--line);background:#fff}
+  .quick{display:flex;gap:8px;flex-wrap:wrap}
+  .quick button{
+    border:1.5px solid #CBD8EC;background:#fff;color:#20314F;font-weight:600;font-size:13px;
+    padding:9px 13px;border-radius:999px;transition:.15s;
+  }
+  .quick button:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .quick button.slot{border-color:#BBD3FF;background:var(--accent-soft);color:#1E4FC2}
+  .inputrow{display:flex;gap:8px;margin-top:10px}
+  .inputrow input{
+    flex:1;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;outline:none;transition:.15s;
+  }
+  .inputrow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,111,237,.12)}
+  .inputrow button{border:0;background:var(--navy);color:#fff;border-radius:12px;padding:0 18px;font-weight:700;font-size:14px}
+  .note{font-size:11.5px;color:#8A99B3;margin-top:9px;text-align:center}
+
+  /* ---------- Business view ---------- */
+  .statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+  @media (max-width:700px){.statrow{grid-template-columns:1fr}}
+  .stat{padding:16px}
+  .stat .k{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .stat .v{font-size:24px;font-weight:800;margin-top:6px;letter-spacing:-.5px}
+  .stat .v small{font-size:12.5px;color:var(--success);font-weight:700;margin-left:6px}
+  .pipeline{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media (max-width:840px){.pipeline{grid-template-columns:1fr}}
+  .col{padding:14px;min-height:180px}
+  .col h3{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+  .col h3 span{background:#EEF2F8;color:#42526E;border-radius:999px;padding:2px 9px;font-size:12px}
+  .lead{
+    margin-top:11px;border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);animation:pop .3s ease;
+  }
+  .lead .nm{font-weight:700;font-size:14.5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .lead .kv{font-size:12.8px;color:var(--muted);margin-top:5px;display:flex;gap:8px;flex-wrap:wrap}
+  .lead .kv b{color:#33415C;font-weight:600}
+  .pill{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.3px}
+  .pill.new{background:var(--accent-soft);color:#1E4FC2}
+  .pill.qual{background:#F3EAFE;color:#6D28D9}
+  .pill.book{background:var(--success-soft);color:#15803D}
+  .empty{color:#9AA7BD;font-size:13px;margin-top:12px;text-align:center;padding:18px 6px;border:1.5px dashed #DFE6F0;border-radius:12px}
+  .wa{
+    margin-top:16px;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+  }
+  .wa .head{background:#075E54;color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}
+  .wa .head .avatar{background:#25D366;width:32px;height:32px;font-size:12px}
+  .wa .b{background:#E5DDD5;padding:16px;font-size:13.5px}
+  .bubble{background:#fff;border-radius:12px 12px 12px 4px;padding:11px 13px;max-width:92%;box-shadow:0 1px 1px rgba(0,0,0,.08);white-space:pre-wrap;font-size:13.2px;line-height:1.5}
+  .bubble time{display:block;text-align:right;color:#9AA7BD;font-size:10.5px;margin-top:5px}
+  .flow{margin-top:18px}
+  .flow .pad{padding:20px}
+  .steps{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}
+  @media (max-width:900px){.steps{grid-template-columns:repeat(2,1fr)}}
+  .step{border:1px solid var(--line);border-radius:13px;padding:12px;background:#FBFCFE}
+  .step .n{width:24px;height:24px;border-radius:8px;background:var(--navy);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center}
+  .step .t{font-weight:700;font-size:13px;margin-top:8px}
+  .step .d{font-size:12px;color:var(--muted);margin-top:3px}
+  .included{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px 18px}
+  @media (max-width:700px){.included{grid-template-columns:1fr}}
+  .inc{display:flex;gap:9px;font-size:13.5px;color:#33415C;align-items:flex-start}
+  .inc .tick{color:var(--success);font-weight:900;line-height:1.45}
+
+  /* ---------- Toast ---------- */
+  .toasts{position:fixed;right:18px;bottom:18px;z-index:100;display:flex;flex-direction:column;gap:10px;max-width:360px}
+  .toast{
+    background:var(--navy);color:#fff;border-radius:14px;padding:13px 15px;box-shadow:var(--shadow-lg);
+    display:flex;gap:11px;align-items:flex-start;animation:slideIn .3s ease;
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+  .toast .ic{font-size:17px;line-height:1.3}
+  .toast .tx{font-size:13px;line-height:1.45}
+  .toast .tx b{display:block;font-size:13.5px;margin-bottom:1px}
+  .toast .tx span{opacity:.8}
+
+  footer{margin-top:34px;text-align:center;color:#93A1B8;font-size:12.5px}
+  footer b{color:#4A5A75}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">SS</div>
+    Lead Response System
+    <span class="sub">by Symbiote Systems</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="viewtabs">
+    <button id="tabCustomer" class="active" onclick="showView('customer')">👤 Customer view</button>
+    <button id="tabBusiness" onclick="showView('business')">🏢 Business view</button>
+  </div>
+  <div class="livepill"><span class="dot"></span> Live demo</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ CUSTOMER VIEW ============ -->
+  <section id="view-customer" class="view active">
+    <div class="hero">
+      <h1>What your customer sees — a website visitor who never has to wait.</h1>
+      <p>Open the chat and answer like a real lead. Watch the right-hand side: this is exactly how fast your business would respond.</p>
+    </div>
+
+    <div class="grid2">
+      <!-- listing + chat -->
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div class="card listing">
+          <div class="photo">
+            <span class="badge">Featured listing</span>
+            <span class="badge hot">🔥 14 inquiries this week</span>
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="18" y="30" width="84" height="70" rx="6" fill="#F2F6FF"/>
+              <rect x="18" y="30" width="84" height="10" rx="6" fill="#D9E6FF"/>
+              <rect x="28" y="50" width="16" height="14" rx="3" fill="#2F6FED" opacity=".85"/>
+              <rect x="52" y="50" width="16" height="14" rx="3" fill="#7C9DF0"/>
+              <rect x="76" y="50" width="16" height="14" rx="3" fill="#2F6FED" opacity=".65"/>
+              <rect x="28" y="72" width="16" height="14" rx="3" fill="#7C9DF0"/>
+              <rect x="52" y="72" width="16" height="14" rx="3" fill="#2F6FED" opacity=".85"/>
+              <rect x="76" y="72" width="16" height="14" rx="3" fill="#7C9DF0"/>
+              <rect x="78" y="14" width="8" height="20" rx="3" fill="#9DB6E8"/>
+              <circle cx="82" cy="10" r="4" fill="#9DB6E8"/>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="price">PKR 2.4 Cr <small>· negotiable</small></div>
+            <div class="ltitle">2-Bed Apartment — Skyline Residences</div>
+            <div class="lmeta">DHA Phase 5, Lahore · 1,450 sq ft · 3rd floor · Ready to move</div>
+            <div class="chipsrow">
+              <span class="tag">✓ Verified listing</span>
+              <span class="tag">✓ Corner unit</span>
+              <span class="tag">✓ Covered parking</span>
+            </div>
+            <button class="cta" onclick="focusChat()">💬 Ask about this property</button>
+            <div class="democtl">
+              <button onclick="restartDemo()">↻ Restart demo</button>
+              <button onclick="simulateQuietLead()">😴 Simulate quiet lead</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- chat -->
+      <div class="card chat">
+        <div class="chathead">
+          <div class="avatar">S</div>
+          <div style="flex:1">
+            <div class="who">Sofia — Lead Assistant</div>
+            <div class="status"><span class="dot" style="width:7px;height:7px"></span> Online · replies instantly, 24/7</div>
+          </div>
+        </div>
+        <div class="chatbody" id="chatBody"></div>
+        <div class="quickbar">
+          <div class="quick" id="quickOptions"></div>
+          <div class="inputrow" id="inputRow" style="display:none">
+            <input id="chatInput" placeholder="Type your name…" onkeydown="if(event.key==='Enter')sendTyped()" />
+            <button onclick="sendTyped()">Send</button>
+          </div>
+          <div class="note">This is a demo conversation. Every answer below is captured for the business in real time.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BUSINESS VIEW ============ -->
+  <section id="view-business" class="view">
+    <div class="hero">
+      <h1>What you (the business) see — live, without lifting a finger.</h1>
+      <p>Every answer from the chat lands here instantly. No lead sits unanswered. No follow-up is forgotten.</p>
+    </div>
+
+    <div class="statrow">
+      <div class="card stat"><div class="k">Avg. first response</div><div class="v">0 sec <small>instant</small></div></div>
+      <div class="card stat"><div class="k">Leads captured today</div><div class="v" id="statLeads">0</div></div>
+      <div class="card stat"><div class="k">Viewings booked</div><div class="v" id="statBooked">0</div></div>
+    </div>
+
+    <div class="pipeline">
+      <div class="card col">
+        <h3>New <span id="cntNew">0</span></h3>
+        <div id="colNew"><div class="empty">Waiting for the next lead…</div></div>
+      </div>
+      <div class="card col">
+        <h3>Qualified <span id="cntQual">0</span></h3>
+        <div id="colQual"><div class="empty">Qualified leads appear here.</div></div>
+      </div>
+      <div class="card col">
+        <h3>Booked <span id="cntBook">0</span></h3>
+        <div id="colBook"><div class="empty">Booked viewings appear here.</div></div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:20px">
+      <div class="card wa card">
+        <div class="wa">
+          <div class="head"><div class="avatar">SS</div> WhatsApp · Owner notification</div>
+          <div class="b">
+            <div class="bubble" id="waBubble">🔔 <b>No notification yet</b>
+Go to the Customer view and start the chat — the owner's phone buzzes the moment a lead is qualified or a viewing is booked.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card col">
+        <h3>Follow-up engine <span>ON</span></h3>
+        <div id="followList"><div class="empty">Follow-ups are scheduled automatically when a lead goes quiet.</div></div>
+      </div>
+    </div>
+
+    <div class="card flow">
+      <div class="pad">
+        <h3 style="font-size:15px;font-weight:800">How the system works</h3>
+        <div class="steps">
+          <div class="step"><div class="n">1</div><div class="t">Capture</div><div class="d">Website form, WhatsApp or Instagram inquiry received.</div></div>
+          <div class="step"><div class="n">2</div><div class="t">Instant reply</div><div class="d">Lead gets a response in seconds — not hours.</div></div>
+          <div class="step"><div class="n">3</div><div class="t">Qualify</div><div class="d">3–5 smart questions: budget, area, timeline.</div></div>
+          <div class="step"><div class="n">4</div><div class="t">Book</div><div class="d">Hot leads pick a viewing slot themselves.</div></div>
+          <div class="step"><div class="n">5</div><div class="t">Notify</div><div class="d">You get a clean summary on WhatsApp instantly.</div></div>
+          <div class="step"><div class="n">6</div><div class="t">Follow up</div><div class="d">Quiet leads get nudged automatically. Nothing dies.</div></div>
+        </div>
+        <div class="included">
+          <div class="inc"><span class="tick">✓</span> Lead capture (website form or landing page)</div>
+          <div class="inc"><span class="tick">✓</span> Instant auto-response, 24/7</div>
+          <div class="inc"><span class="tick">✓</span> Qualification questions built for your niche</div>
+          <div class="inc"><span class="tick">✓</span> Self-service viewing / appointment booking</div>
+          <div class="inc"><span class="tick">✓</span> Automatic follow-ups for quiet leads</div>
+          <div class="inc"><span class="tick">✓</span> WhatsApp / email notification with full summary</div>
+          <div class="inc"><span class="tick">✓</span> Simple lead dashboard (no new software to learn)</div>
+          <div class="inc"><span class="tick">✓</span> Setup in 5–7 days · works with your current website</div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="cta ghost" style="width:auto;padding:12px 18px" onclick="showView('customer')">▶ Replay the customer side</button>
+          <button class="cta ghost" style="width:auto;padding:12px 18px" onclick="restartDemo()">↻ Reset demo data</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <b>Symbiote Systems</b> — we fix the gap between a lead arriving and you replying.<br/>
+    Interactive demo · nothing here is sent or stored online · works offline
+  </footer>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================================================
+   Lead Response System — demo state machine
+   ============================================================ */
+
+const state = {
+  lead: null,            // { name, budget, area, timeline, slot, status }
+  step: 0,
+  busy: false,
+  quietFired: false,
+  followUps: [],
+};
+
+const SCRIPT = [
+  {
+    key: 'name',
+    typing: 700,
+    text: "Hi! 👋 Sofia here from Skyline Estates. I saw you're interested in the 2-bed apartment in DHA Phase 5.\n\nBefore I send you the details — what's your name?",
+    freeText: true,
+    placeholder: "Type your name…",
+  },
+  {
+    key: 'budget',
+    typing: 850,
+    text: () => `Nice to meet you, ${firstName()}! 😊 This unit is listed at PKR 2.4 Cr.\n\nWhat budget range are you comfortable with?`,
+    chips: ['1.8 – 2.2 Cr', '2.2 – 2.5 Cr', '2.5 Cr +', 'Not sure yet'],
+  },
+  {
+    key: 'area',
+    typing: 850,
+    text: "Perfect. And which area are you looking at?",
+    chips: ['DHA', 'Bahria Town', 'Askari', 'Anywhere in Lahore'],
+  },
+  {
+    key: 'timeline',
+    typing: 850,
+    text: "Got it. When are you hoping to move?",
+    chips: ['This month', '1–3 months', 'Just exploring'],
+  },
+  {
+    key: 'slot',
+    typing: 1000,
+    text: "Excellent — based on your answers this unit is a strong match. 🎯\n\nThe owner is available for viewings this week. Which slot works for you?",
+    chips: ['Tue 6:00 PM', 'Thu 7:30 PM', 'Sat 11:00 AM', 'Another time'],
+    slot: true,
+  },
+];
+
+/* ---------- helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const firstName = () => (state.lead && state.lead.name ? state.lead.name.split(' ')[0] : 'there');
+const nowTime = () => new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+function showView(which){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $('view-' + which).classList.add('active');
+  $('tabCustomer').classList.toggle('active', which === 'customer');
+  $('tabBusiness').classList.toggle('active', which === 'business');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function focusChat(){
+  if (state.step === 0 && !state.busy) startChat();
+  $('chatBody').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* ---------- chat rendering ---------- */
+function addMsg(kind, text){
+  const el = document.createElement('div');
+  el.className = 'msg ' + kind;
+  el.textContent = text;
+  $('chatBody').appendChild(el);
+  $('chatBody').scrollTop = $('chatBody').scrollHeight;
+  return el;
+}
+function showTyping(){
+  const el = document.createElement('div');
+  el.className = 'typing';
+  el.id = 'typingBubble';
+  el.innerHTML = '<i></i><i></i><i></i>';
+  $('chatBody').appendChild(el);
+  $('chatBody').scrollTop = $('chatBody').scrollHeight;
+}
+function hideTyping(){ const t = $('typingBubble'); if (t) t.remove(); }
+
+function setQuick(buttons, slot){
+  const bar = $('quickOptions');
+  bar.innerHTML = '';
+  if (!buttons || !buttons.length) return;
+  buttons.forEach(label => {
+    const b = document.createElement('button');
+    if (slot) b.classList.add('slot');
+    b.textContent = label;
+    b.onclick = () => onAnswer(label, slot);
+    bar.appendChild(b);
+  });
+}
+
+function setInput(on, placeholder){
+  const row = $('inputRow');
+  row.style.display = on ? 'flex' : 'none';
+  if (placeholder) $('chatInput').placeholder = placeholder;
+  if (on) setTimeout(() => $('chatInput').focus(), 150);
+}
+
+/* ---------- conversation ---------- */
+function startChat(){
+  addMsg('sys', '🟢 New session — the business would see this chat as a live website inquiry');
+  runStep();
+}
+
+function runStep(){
+  const s = SCRIPT[state.step];
+  if (!s) return;
+  state.busy = true;
+  setQuick([]);
+  setInput(false);
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addMsg('bot', typeof s.text === 'function' ? s.text() : s.text);
+    state.busy = false;
+    if (s.freeText) setInput(true, s.placeholder);
+    if (s.chips) setQuick(s.chips, s.slot);
+    scheduleQuietCheck(s);
+  }, s.typing);
+}
+
+function onAnswer(value, isSlot){
+  if (state.busy) return;
+  const s = SCRIPT[state.step];
+  addMsg('user', value);
+  setQuick([]); setInput(false);
+  if (!s){ // post-booking chips
+    showTyping();
+    setTimeout(() => {
+      hideTyping();
+      addMsg('bot', 'Sure — noted! 👍 I\'ve passed that to the agent, and he\'ll include it with your WhatsApp confirmation.');
+      setQuick(['👍 Sounds good'], false);
+    }, 800);
+    return;
+  }
+  captureAnswer(s.key, value);
+  if (isSlot) return finishBooking(value);
+  state.step++;
+  setTimeout(runStep, 380);
+}
+
+function sendTyped(){
+  const v = $('chatInput').value.trim();
+  if (!v || state.busy) return;
+  $('chatInput').value = '';
+  if (!state.lead) state.lead = defaultLead();
+  state.lead.name = v;
+  onAnswer(v, false);
+}
+
+function captureAnswer(key, value){
+  if (!state.lead) state.lead = defaultLead();
+  const lead = state.lead;
+  if (key === 'name') lead.name = value;
+  if (key === 'budget') lead.budget = value;
+  if (key === 'area') lead.area = value;
+  if (key === 'timeline') lead.timeline = value;
+
+  if (!lead.created){ lead.created = true; renderBusiness(); toast('👤', 'New lead captured', lead.name + ' started a chat about the DHA listing'); }
+  else if (key === 'area'){ lead.status = 'Qualified'; renderBusiness(); toast('✅', 'Lead qualified', lead.name + ' · ' + lead.budget + ' · ' + lead.area); }
+  else renderBusiness();
+}
+
+function finishBooking(value){
+  const lead = state.lead || defaultLead();
+  lead.slot = value;
+  lead.status = 'Booked';
+  state.step++;
+  addMsg('sys ok', '✅ Viewing requested: ' + value + ' — owner notified instantly');
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addMsg('bot', `All set, ${firstName()}! 🎉 I've locked in ${value} for the viewing.\n\nThe agent will confirm on WhatsApp shortly, and I'll send you a reminder before the visit. Anything else you'd like to know about the unit?`);
+    setQuick(['Send me the floor plan', 'What are the maintenance charges?', 'Not right now'], false);
+    renderBusiness();
+    toast('📅', 'Viewing booked', lead.name + ' · ' + value + ' · notification sent to owner');
+    addFollowUp('Reminder to lead — 1 day before viewing', 'scheduled');
+    addFollowUp('Thank-you + review request — after visit', 'queued');
+  }, 950);
+}
+
+/* ---------- quiet lead / follow-up demo ---------- */
+function scheduleQuietCheck(stepDef){
+  if (state.quietFired) return;
+  clearTimeout(window.__quietTimer);
+  window.__quietTimer = setTimeout(() => {
+    if (state.busy || state.quietFired) return;
+    const active = SCRIPT[state.step];
+    if (!active || !active.chips) return;       // only during chip steps
+    triggerFollowUp();
+  }, 9000);
+}
+
+function triggerFollowUp(){
+  if (state.quietFired) return;
+  state.quietFired = true;
+  const name = firstName();
+  addMsg('sys', '⏱ 9 seconds with no reply — the system follows up automatically');
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addMsg('bot', `${name}, no rush at all 🙂 Just so you know — units in this building usually go fast, and I can hold a viewing slot for you for 48 hours. Want me to pencil you in?`);
+    addFollowUp('Auto follow-up #1 — sent after 9s silence', 'sent');
+    toast('🔁', 'Auto follow-up sent', 'Lead went quiet — the system followed up without you');
+    if (state.lead) { state.lead.followedUp = true; renderBusiness(); }
+    const s = SCRIPT[state.step];
+    if (s && s.chips) setQuick(s.chips, s.slot);
+  }, 900);
+}
+
+function simulateQuietLead(){
+  if (state.step === 0 && !state.busy && !state.lead) startChat();
+  showView('customer');
+  setTimeout(triggerFollowUp, 600);
+}
+
+/* ---------- business view rendering ---------- */
+function defaultLead(){
+  return { name:'Anonymous visitor', budget:'—', area:'—', timeline:'—', slot:null, status:'New', created:false };
+}
+
+function renderBusiness(){
+  const lead = state.lead;
+  const cols = { New:$('colNew'), Qualified:$('colQual'), Booked:$('colBook') };
+  cols.New.innerHTML = `<div class="empty">Waiting for the next lead…</div>`;
+  cols.Qualified.innerHTML = `<div class="empty">Qualified leads appear here.</div>`;
+  cols.Booked.innerHTML = `<div class="empty">Booked viewings appear here.</div>`;
+
+  const counts = { New:0, Qualified:0, Booked:0 };
+  if (lead && lead.created){
+    const status = lead.status || 'New';
+    counts[status] = (counts[status] || 0) + 1;
+    const target = cols[status];
+    target.innerHTML = leadCard(lead, status);
+    $('statLeads').textContent = '1';
+    $('statBooked').textContent = status === 'Booked' ? '1' : '0';
+
+    if (status === 'Qualified' || status === 'Booked'){
+      $('waBubble').innerHTML = waMessage(lead, status);
+    }
+  }
+  $('cntNew').textContent = counts.New;
+  $('cntQual').textContent = counts.Qualified;
+  $('cntBook').textContent = counts.Booked;
+}
+
+function leadCard(lead, status){
+  const pill = status === 'Booked' ? 'book' : status === 'Qualified' ? 'qual' : 'new';
+  return `
+  <div class="lead">
+    <div class="nm">${esc(lead.name)} <span class="pill ${pill}">${status.toUpperCase()}</span></div>
+    <div class="kv"><span><b>Budget:</b> ${esc(lead.budget)}</span><span><b>Area:</b> ${esc(lead.area)}</span></div>
+    <div class="kv"><span><b>Timeline:</b> ${esc(lead.timeline)}</span></div>
+    ${lead.slot ? `<div class="kv"><span>📅 <b>Viewing:</b> ${esc(lead.slot)}</span></div>` : ''}
+    ${lead.followedUp ? `<div class="kv"><span>🔁 <b>Auto follow-up sent</b></span></div>` : ''}
+    <div class="kv" style="margin-top:9px"><span><b>Next action:</b> ${
+      status === 'Booked' ? 'Confirm on WhatsApp · agent call 15 min before viewing'
+      : status === 'Qualified' ? 'Offer viewing slots (auto-sent)'
+      : 'Continue qualification (auto)'
+    }</span></div>
+  </div>`;
+}
+
+function waMessage(lead, status){
+  if (status === 'Booked'){
+    return `🔔 <b>Viewing booked</b>
+<b>${esc(lead.name)}</b>
+💰 ${esc(lead.budget)} · 📍 ${esc(lead.area)} · ⏱ ${esc(lead.timeline)}
+📅 <b>${esc(lead.slot)}</b>
+Qualified automatically by your Lead Assistant.
+<time>${nowTime()}</time>`;
+  }
+  return `🔔 <b>New qualified lead</b>
+<b>${esc(lead.name)}</b>
+💰 ${esc(lead.budget)} · 📍 ${esc(lead.area)} · ⏱ ${esc(lead.timeline)}
+Status: Qualified — viewing slots offered automatically.
+<time>${nowTime()}</time>`;
+}
+
+function addFollowUp(text, kind){
+  const list = $('followList');
+  if (list.querySelector('.empty')) list.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'lead';
+  el.innerHTML = `<div class="nm" style="font-size:13.5px">${esc(text)}
+    <span class="pill ${kind === 'sent' ? 'qual' : 'new'}">${kind.toUpperCase()}</span></div>`;
+  list.appendChild(el);
+}
+
+/* ---------- toasts ---------- */
+function toast(icon, title, body){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<div class="ic">${icon}</div><div class="tx"><b>${esc(title)}</b><span>${esc(body)}</span></div>`;
+  $('toasts').appendChild(el);
+  setTimeout(() => { el.style.transition = '.4s'; el.style.opacity = '0'; el.style.transform = 'translateX(24px)'; setTimeout(() => el.remove(), 420); }, 5200);
+}
+
+function esc(s){ const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+/* ---------- reset ---------- */
+function restartDemo(){
+  clearTimeout(window.__quietTimer);
+  state.lead = null; state.step = 0; state.busy = false; state.quietFired = false;
+  $('chatBody').innerHTML = '';
+  $('toasts').innerHTML = '';
+  $('quickOptions').innerHTML = '';
+  setInput(false);
+  $('waBubble').innerHTML = '🔔 <b>No notification yet</b>\nGo to the Customer view and start the chat — the owner\'s phone buzzes the moment a lead is qualified or a viewing is booked.';
+  document.querySelectorAll('#colNew .lead, #colQual .lead, #colBook .lead').forEach(n => n.remove());
+  $('followList').innerHTML = '<div class="empty">Follow-ups are scheduled automatically when a lead goes quiet.</div>';
+  $('statLeads').textContent = '0'; $('statBooked').textContent = '0';
+  renderBusiness();
+  showView('customer');
+  toast('↻', 'Demo reset', 'Ready for the next run-through');
+}
+
+/* ---------- boot ---------- */
+renderBusiness();
+setTimeout(startChat, 700);
+</script>
+</body>
+</html>
